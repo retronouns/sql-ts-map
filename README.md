@@ -7,5 +7,5 @@ It is assuming database introspection wad used to create a [generated Typescript
 No other code generation is used.
 
 T run:
-    1. `npm i` from the project root
-    1. navigate to [main.ts](./src/main.ts) and mouseover SelectTest
+1. `npm i` from the project root
+1. navigate to [main.ts](./src/main.ts) and mouseover SelectTest
