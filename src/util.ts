@@ -3,7 +3,8 @@ type StringToUnion<
     Acc = never,
 > = T extends `${infer L}${infer R}` ? StringToUnion<R, L | Acc> : Acc
 
-export type Alpha = StringToUnion<'abcdefghijklmnopqrstuvwxyz_'>
+export type Alpha =
+    StringToUnion<'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'>
 export type Digit = StringToUnion<'0123456789'>
 export type Whitespace = StringToUnion<' \n\t'>
 

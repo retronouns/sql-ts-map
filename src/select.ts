@@ -104,7 +104,7 @@ type MapSelect<
     : Acc
 
 export type Select<T extends string> = Lowercase<
-    NextAlphaWord<T>
+    NextAlphaWord<TrimLeft<T>>
 > extends 'select'
     ? TrimLeft<T> extends `${NextAlphaWord<TrimLeft<T>>}${infer R}`
         ? SelectReturn<TrimLeft<R>> extends [
