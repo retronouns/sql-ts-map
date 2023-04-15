@@ -96,7 +96,7 @@ type MapSelect<
               ]
                 ? MapSelect<
                       [Rest, TableMap],
-                      { [K in Column]: Tables[TableMap[Key]][Column] } & Acc
+                      Acc & { [K in Column]: Tables[TableMap[Key]][Column] }
                   >
                 : Acc
             : Acc
