@@ -9,3 +9,5 @@ No other code generation is used.
 T run:
 1. `npm i` from the project root
 1. navigate to [main.ts](./src/main.ts) and mouseover SelectTest
+
+![Types](./parse_poc.png)
