@@ -1,0 +1,21 @@
+{
+    "name": "sql-ts",
+    "version": "1.0.0",
+    "description": "Provides Typescript typing for SQL strings.",
+    "main": "src/main.ts",
+    "scripts": {
+        "test": "test"
+    },
+    "keywords": [
+        "Typescript",
+        "SQL",
+        "Postgres"
+    ],
+    "author": "retronouns",
+    "license": "ISC",
+    "dependencies": {
+        "prettier": "^2.8.7",
+        "sql-template-strings": "^2.2.2",
+        "typescript": "^5.0.4"
+    }
+}
