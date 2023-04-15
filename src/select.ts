@@ -58,8 +58,14 @@ type SelectFrom<
                                               ],
                                           ]
                                       >
-                                    : never
-                                : never
+                                    : R
+                                : [
+                                      ...R,
+                                      [
+                                          NextAlphaWord<TrimLeft<B>>,
+                                          NextAlphaWord<TrimLeft<A>>,
+                                      ],
+                                  ]
                             : never
                         : never
                     : never
@@ -100,7 +106,7 @@ type MapSelect<
 export type Select<T extends string> = Lowercase<
     NextAlphaWord<T>
 > extends 'select'
-    ? T extends `${NextAlphaWord<T>}${infer R}`
+    ? TrimLeft<T> extends `${NextAlphaWord<TrimLeft<T>>}${infer R}`
         ? SelectReturn<TrimLeft<R>> extends [
               infer SRColumns extends [string, string][],
               infer SRTail extends string,
