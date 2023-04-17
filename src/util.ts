@@ -8,32 +8,35 @@ export type Alpha =
 export type Digit = StringToUnion<'0123456789'>
 export type Whitespace = StringToUnion<' \n\t'>
 
-export type TrimLeft<T extends string> = T extends `${Whitespace}${infer R}`
+export type TrimLeft<T extends string> = T extends
+    | `${Whitespace}${Whitespace}${infer R}`
+    | `${Whitespace}${infer R}`
     ? TrimLeft<R>
     : T
 
 type TryConsumeNextMatchingIRec<
     Text extends string,
     Matcher extends string,
-    FullMatch extends string,
-    Acc extends [string, string],
-> = Text extends `${infer TextLeft}${infer TextRight}`
-    ? Lowercase<Matcher> extends `${Lowercase<TextLeft>}${infer MatchRight}`
-        ? TryConsumeNextMatchingIRec<
-              TextRight,
-              MatchRight,
-              FullMatch,
-              [`${Acc[0]}${TextLeft}`, TextRight]
-          >
-        : Lowercase<Acc[0]> extends Lowercase<FullMatch>
-        ? [Lowercase<Acc[0]>, TrimLeft<Acc[1]>]
+> = Matcher extends ``
+    ? Text
+    : Text extends `${infer Left extends string}${infer Right extends string}`
+    ? Lowercase<Matcher> extends `${Lowercase<Left>}${infer MatcherRight extends string}`
+        ? TryConsumeNextMatchingIRec<Right, MatcherRight>
         : never
     : never
-
 export type TryConsumeNextMatchingI<
     Text extends string,
     Matcher extends string,
-> = TryConsumeNextMatchingIRec<TrimLeft<Text>, Matcher, Matcher, ['', '']>
+> = TryConsumeNextMatchingIRec<
+    TrimLeft<Text>,
+    Matcher
+> extends infer Rest extends string
+    ? Lowercase<
+          TrimLeft<Text>
+      > extends `${Lowercase<Matcher>}${Lowercase<Rest>}`
+        ? TrimLeft<Rest>
+        : never
+    : never
 
 type TryConsumeNextWordRec<
     Text extends string,
@@ -42,12 +45,14 @@ type TryConsumeNextWordRec<
 > = Text extends `${infer Left}${infer Right}`
     ? Left extends Chars
         ? TryConsumeNextWordRec<Right, [`${Acc[0]}${Left}`, Right], Chars>
-        : [Acc[0], TrimLeft<Acc[1]>]
+        : Acc
     : Acc
 
 export type TryConsumeNextWord<Text extends string> = TryConsumeNextWordRec<
     TrimLeft<Text>
->
+> extends [infer Word extends string, infer Rest extends string]
+    ? [Word, TrimLeft<Rest>]
+    : never
 
 type NextAlphaWordRec<
     T extends string,
