@@ -12,6 +12,43 @@ export type TrimLeft<T extends string> = T extends `${Whitespace}${infer R}`
     ? TrimLeft<R>
     : T
 
+type NextMatchingIRec<
+    Text extends string,
+    Matcher extends string,
+    FullMatch extends string,
+    Acc extends [string, string],
+> = Text extends `${infer TextLeft}${infer TextRight}`
+    ? Lowercase<Matcher> extends `${Lowercase<TextLeft>}${infer MatchRight}`
+        ? NextMatchingIRec<
+              TextRight,
+              MatchRight,
+              FullMatch,
+              [`${Acc[0]}${TextLeft}`, TextRight]
+          >
+        : Lowercase<Acc[0]> extends Lowercase<FullMatch>
+        ? [Lowercase<Acc[0]>, TrimLeft<Acc[1]>]
+        : never
+    : never
+
+export type TryConsumeNextMatchingI<
+    Text extends string,
+    Matcher extends string,
+> = NextMatchingIRec<TrimLeft<Text>, Matcher, Matcher, ['', '']>
+
+type TryConsumeNextWordRec<
+    Text extends string,
+    Acc extends [string, string] = ['', ''],
+    Chars extends string = Alpha | Digit | '.',
+> = Text extends `${infer Left}${infer Right}`
+    ? Left extends Chars
+        ? TryConsumeNextWordRec<Right, [`${Acc[0]}${Left}`, Right], Chars>
+        : [Acc[0], TrimLeft<Acc[1]>]
+    : Acc
+
+export type TryConsumeNextWord<Text extends string> = TryConsumeNextWordRec<
+    TrimLeft<Text>
+>
+
 type NextAlphaWordRec<
     T extends string,
     S extends string = '',
@@ -24,16 +61,6 @@ type NextAlphaWordRec<
     : S
 export type NextAlphaWord<T extends string> = NextAlphaWordRec<T>
 
-export type AnyCase<T extends string> = string extends T
-    ? string
-    : T extends `${infer F1}${infer F2}${infer R}`
-    ? `${Uppercase<F1> | Lowercase<F1>}${
-          | Uppercase<F2>
-          | Lowercase<F2>}${AnyCase<R>}`
-    : T extends `${infer F}${infer R}`
-    ? `${Uppercase<F> | Lowercase<F>}${AnyCase<R>}`
-    : ''
-
-export type Flat<T extends { [K in keyof T]: any }> = {
+export type Collapse<T extends { [K in keyof T]: any }> = {
     [K in keyof T]: T[K]
 }

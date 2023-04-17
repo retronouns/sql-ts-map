@@ -1,4 +1,4 @@
-import { Whitespace, NextAlphaWord, TrimLeft, Flat } from './util'
+import { Whitespace, NextAlphaWord, TrimLeft, Collapse } from './util'
 import { Tables } from './tables'
 
 type SelectReturn<
@@ -112,7 +112,7 @@ export type Select<T extends string> = Lowercase<
               infer SRTail extends string,
           ]
             ? Lowercase<NextAlphaWord<SRTail>> extends 'from'
-                ? Flat<
+                ? Collapse<
                       MapSelect<
                           [SRColumns, FromMap<SelectFrom<TrimLeft<SRTail>>>]
                       >
