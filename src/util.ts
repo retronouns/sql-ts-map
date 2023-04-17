@@ -12,14 +12,14 @@ export type TrimLeft<T extends string> = T extends `${Whitespace}${infer R}`
     ? TrimLeft<R>
     : T
 
-type NextMatchingIRec<
+type TryConsumeNextMatchingIRec<
     Text extends string,
     Matcher extends string,
     FullMatch extends string,
     Acc extends [string, string],
 > = Text extends `${infer TextLeft}${infer TextRight}`
     ? Lowercase<Matcher> extends `${Lowercase<TextLeft>}${infer MatchRight}`
-        ? NextMatchingIRec<
+        ? TryConsumeNextMatchingIRec<
               TextRight,
               MatchRight,
               FullMatch,
@@ -33,7 +33,7 @@ type NextMatchingIRec<
 export type TryConsumeNextMatchingI<
     Text extends string,
     Matcher extends string,
-> = NextMatchingIRec<TrimLeft<Text>, Matcher, Matcher, ['', '']>
+> = TryConsumeNextMatchingIRec<TrimLeft<Text>, Matcher, Matcher, ['', '']>
 
 type TryConsumeNextWordRec<
     Text extends string,
