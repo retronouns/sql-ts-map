@@ -31,19 +31,12 @@ type TryConsumeSelect<Text extends string> = TryConsumeNextMatchingI<
 type TryConsumeSelectFrom<Text extends string> = TryConsumeNextMatchingI<
     Text,
     'FROM'
-> extends [infer _, infer Rest extends string]
-    ? TryConsumeNextWord<Rest> extends [
-          infer Table extends string,
-          infer Rest extends string,
+> extends infer Text extends string
+    ? TryConsumeNextWord<Text> extends [
+          infer Column extends string,
+          infer Tail extends string,
       ]
-        ? TryConsumeNextMatchingI<Rest, 'JOIN'> extends [
-              infer _,
-              infer Rest extends string,
-          ]
-            ? [Table, Table]
-            : TryConsumeNextWord<Rest> extends [infer Alias, infer Rest]
-            ? [Table, Alias]
-            : never
+        ? Column
         : never
     : never
 
