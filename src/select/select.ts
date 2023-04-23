@@ -24,72 +24,102 @@ type SelectParts<T extends string> = ParseTokens<T> extends [
 export type Select<T extends string> = ParseTokens<T>
 
 type test = SelectParts<typeof SQL>
-type test2 = ConsumeSelectColumn<[`SELECT`, `id`, `,`]>
-type test3 = ConsumeSelectColumn<ParseTokens<typeof SQL>>
+type test2 = ConsumeSelectColumns<[`SELECT`, `id`, `,`]>
+type test3 = ConsumeSelectColumns<ParseTokens<typeof SQL>>
 type COL_START = `SELECT` | `,`
 type COL_END = `FROM` | `,`
 type AS = `AS`
-export type ConsumeSelectColumn<T extends string[]> = ConsumeSelectColumnsRec<
+export type ConsumeSelectColumns<T extends string[]> = ConsumeSelectColumnsRec<
     T,
-    []
+    [[], []]
 >
 export type ConsumeSelectColumnsRec<
     T extends string[],
-    Acc extends [string, string, string][], // [table, column, alias]
+    Acc extends [[string, string, string][], string[]], // [[table, column, alias], [...tail]]
 > = T extends [
     // parses with a table identifier
-    COL_START,
+    infer Start extends COL_START,
     `${infer Table}.${infer Column}`,
     infer End extends COL_END,
     ...infer Rest extends string[],
 ]
-    ? ConsumeSelectColumnsRec<[End, ...Rest], [...Acc, [Table, Column, Column]]>
+    ? ConsumeSelectColumnsRec<
+          [End, ...Rest],
+          [
+              [...Acc[0], [Table, Column, Column]],
+              [...Acc[1], Start, `${Table}.${Column}`],
+          ]
+      >
     : T extends [
           // parses with a table identifier & an explicit alias
-          COL_START,
+          infer Start extends COL_START,
           `${infer Table}.${infer Column}`,
           AS,
           infer Alias extends string,
           infer End extends COL_END,
           ...infer Rest extends string[],
       ]
-    ? ConsumeSelectColumnsRec<[End, ...Rest], [...Acc, [Table, Column, Alias]]>
+    ? ConsumeSelectColumnsRec<
+          [End, ...Rest],
+          [
+              [...Acc[0], [Table, Column, Alias]],
+              [...Acc[1], Start, `${Table}.${Column}`, AS, Alias],
+          ]
+      >
     : T extends [
           // parses with a table identifier & an implicit alias
-          COL_START,
+          infer Start extends COL_START,
           `${infer Table}.${infer Column}`,
           infer Alias extends string,
           infer End extends COL_END,
           ...infer Rest extends string[],
       ]
-    ? ConsumeSelectColumnsRec<[End, ...Rest], [...Acc, [Table, Column, Alias]]>
+    ? ConsumeSelectColumnsRec<
+          [End, ...Rest],
+          [
+              [...Acc[0], [Table, Column, Alias]],
+              [...Acc[1], Start, `${Table}.${Column}`, Alias],
+          ]
+      >
     : T extends [
           // parses naive case
-          COL_START,
+          infer Start extends COL_START,
           infer Column extends string,
           infer End extends COL_END,
           ...infer Rest extends string[],
       ]
-    ? ConsumeSelectColumnsRec<[End, ...Rest], [...Acc, [``, Column, Column]]>
+    ? ConsumeSelectColumnsRec<
+          [End, ...Rest],
+          [[...Acc[0], [``, Column, Column]], [...Acc[1], Start, Column]]
+      >
     : T extends [
           // parses naive case with an explicit alias
-          COL_START,
+          infer Start extends COL_START,
           infer Column extends string,
           AS,
           infer Alias extends string,
           infer End extends COL_END,
           ...infer Rest extends string[],
       ]
-    ? ConsumeSelectColumnsRec<[End, ...Rest], [...Acc, [``, Column, Alias]]>
+    ? ConsumeSelectColumnsRec<
+          [End, ...Rest],
+          [
+              [...Acc[0], [``, Column, Alias]],
+              [...Acc[1], Start, Column, AS, Alias],
+          ]
+      >
     : T extends [
           // parses naive case with an implicit alias
-          COL_START,
+          infer Start extends COL_START,
           infer Column extends string,
           infer Alias extends string,
           infer End extends COL_END,
           ...infer Rest extends string[],
       ]
-    ? ConsumeSelectColumnsRec<[End, ...Rest], [...Acc, [``, Column, Alias]]>
+    ? ConsumeSelectColumnsRec<
+          [End, ...Rest],
+          [[...Acc[0], [``, Column, Alias]], [...Acc[1], Start, Column, Alias]]
+      >
     : Acc
 // type ConsumeSelectColumns<
 //     T extends string[],
