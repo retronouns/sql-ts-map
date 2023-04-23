@@ -51,7 +51,23 @@ const test = () => {
     expectToBe<ConsumeSelectColumn<[`,`, `'stringy string'`, `text`, `,`]>>([[``, `'stringy string'`, `text`]])
     expectToBe<ConsumeSelectColumn<[`SELECT`, `'stringy string'`, `text`, `FROM`]>>([[``, `'stringy string'`, `text`]])
     expectToBe<ConsumeSelectColumn<[`,`, `'stringy string'`, `text`, `FROM`]>>([[``, `'stringy string'`, `text`]])
-    
+
+    // parses a number
+    expectToBe<ConsumeSelectColumn<[`SELECT`, `123`, `,`]>>([[``, `123`, `123`]])
+    expectToBe<ConsumeSelectColumn<[`,`, `123`, `,`]>>([[``, `123`, `123`]])
+    expectToBe<ConsumeSelectColumn<[`SELECT`, `123`, `FROM`]>>([[``, `123`, `123`]])
+    expectToBe<ConsumeSelectColumn<[`,`, `123`, `FROM`]>>([[``, `123`, `123`]])
+    // parses a number with an explicit alias
+    expectToBe<ConsumeSelectColumn<[`SELECT`, `123`, `AS`, `text`, `,`]>>([[``, `123`, `text`]])
+    expectToBe<ConsumeSelectColumn<[`,`, `123`, `AS`, `text`, `,`]>>([[``, `123`, `text`]])
+    expectToBe<ConsumeSelectColumn<[`SELECT`, `123`, `AS`, `text`, `FROM`]>>([[``, `123`, `text`]])
+    expectToBe<ConsumeSelectColumn<[`,`, `123`, `AS`, `text`, `FROM`]>>([[``, `123`, `text`]])
+    // parses a number with an implicit alias
+    expectToBe<ConsumeSelectColumn<[`SELECT`, `123`, `text`, `,`]>>([[``, `123`, `text`]])
+    expectToBe<ConsumeSelectColumn<[`,`, `123`, `text`, `,`]>>([[``, `123`, `text`]])
+    expectToBe<ConsumeSelectColumn<[`SELECT`, `123`, `text`, `FROM`]>>([[``, `123`, `text`]])
+    expectToBe<ConsumeSelectColumn<[`,`, `123`, `text`, `FROM`]>>([[``, `123`, `text`]])
+
     // Returns empty if bad format
     expectToBe<ConsumeSelectColumn<[`id`, `,`]>>([])
     expectToBe<ConsumeSelectColumn<[`SELECT`, `id`]>>([])
