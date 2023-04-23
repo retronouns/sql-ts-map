@@ -1,62 +1,51 @@
-import {
-    NextAlphaWord,
-    TryConsumeNextMatchingI,
-    TryConsumeNextWord,
-    Alpha,
-    Digit,
-    Whitespace,
-    TrimLeft,
-    Collapse,
-} from './util'
+import { Alpha, Whitespace, Digit, Comparator, TrimLeft } from './util'
 
-const SQL = `
-SELECT 
-    u.id,
-    u.name,
-    p.title,
-    p.body
-FROM users u
-JOIN posts p ON p.user_id = u.id
-WHERE u.id = 1`
+type Trim<T extends string> = TrimLeft<T, Whitespace>
+type Special = Comparator | `,`
+type TrimSpecial<T extends string> = TrimLeft<T, Special>
 
-type TryConsumeSelect<Text extends string> = TryConsumeNextMatchingI<
-    Text,
-    'SELECT'
-> extends [infer _, infer Rest extends string]
-    ? TryConsumeSelectReturn<Rest> extends [infer Columns, infer Rest]
-        ? Columns
-        : never
+type ParseString<T extends string> = T extends `'${infer B}`
+    ? `'${ParseStringRec<B, ''>}'`
+    : never
+type ParseStringRec<
+    T extends string,
+    Acc extends string,
+> = T extends `'${infer B}`
+    ? Acc
+    : T extends `\\${infer A}${infer B}`
+    ? ParseStringRec<B, `${Acc}\\${A}`>
+    : T extends `${infer A}${infer B}`
+    ? ParseStringRec<B, `${Acc}${A}`>
     : never
 
-type TryConsumeSelectFrom<Text extends string> = TryConsumeNextMatchingI<
-    Text,
-    'FROM'
-> extends infer Text extends string
-    ? TryConsumeNextWord<Text> extends [
-          infer Column extends string,
-          infer Tail extends string,
-      ]
-        ? Column
-        : never
+type WordChars = Alpha | Digit | `.`
+
+type ParseWordRec<
+    T extends string,
+    Acc extends string,
+> = T extends `${infer A extends WordChars}${infer B}`
+    ? ParseWordRec<B, `${Acc}${A}`>
+    : Acc
+type ParseWord<T extends string> = ParseWordRec<T, ``>
+
+type ParseToken<T extends string> = `` extends Trim<T>
+    ? never
+    : Trim<T> extends `${infer Trimmed extends string}`
+    ? Trimmed extends `'${infer Tail extends string}`
+        ? ParseString<Trimmed>
+        : Trimmed extends `${Special}${infer Tail extends string}`
+        ? Trimmed extends `${infer A}${TrimSpecial<Trimmed>}`
+            ? A
+            : never
+        : ParseWord<Trimmed>
     : never
 
-type test = TryConsumeSelectFrom<`FROM users u
-JOIN posts p ON p.user_id = u.id
-WHERE u.id = 1`>
-// : TryConsumeNextMatchingI<Text, 'JOIN'> extends [infer _, infer Rest]
-// ? TryConsumeSelectFrom<Rest, Acc>
-// : Acc
-
-type TryConsumeSelectReturn<
-    Text extends string,
-    Acc extends [[string, string][], string] = [[], ''],
-> = TryConsumeNextWord<Text> extends [infer Column extends string, infer Rest]
-    ? Rest extends `,${infer Tail}`
-        ? TryConsumeSelectReturn<Tail, [[...Acc[0], ParseColumn<Column>], Rest]>
-        : [[...Acc[0], ParseColumn<Column>], Rest]
+type ParseTokensRec<T extends string, Acc extends string[]> = `` extends T
+    ? Acc
+    : ParseToken<T> extends `${infer A extends string}`
+    ? T extends `${A}${infer B extends string}`
+        ? ParseTokensRec<Trim<B>, [...Acc, A]>
+        : Acc
     : never
 
-type ParseColumn<Text extends string> =
-    Text extends `${infer Alias}.${infer Value}` ? [Alias, Value] : never
-
-type SelectTest = TryConsumeSelect<typeof SQL>
+export type ParseTokens<T extends string> = ParseTokensRec<Trim<T>, []>

@@ -6,13 +6,13 @@ type StringToUnion<
 export type Alpha =
     StringToUnion<'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'>
 export type Digit = StringToUnion<'0123456789'>
+export type Comparator = `>=` | `<=` | `!=` | `=` | `>` | `<`
 export type Whitespace = StringToUnion<' \n\t'>
 
-export type TrimLeft<T extends string> = T extends
-    | `${Whitespace}${Whitespace}${infer R}`
-    | `${Whitespace}${infer R}`
-    ? TrimLeft<R>
-    : T
+export type TrimLeft<
+    T extends string,
+    X extends string = Whitespace,
+> = T extends `${X}${X}${infer R}` | `${X}${infer R}` ? TrimLeft<R, X> : T
 
 type TryConsumeNextMatchingIRec<
     Text extends string,
