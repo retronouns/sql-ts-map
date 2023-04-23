@@ -1,4 +1,4 @@
-import { Select } from './select'
+import { Select } from './select/'
 
 const SQL = `
 SELECT 

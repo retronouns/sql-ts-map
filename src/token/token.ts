@@ -52,7 +52,9 @@ type ParseTokensRec<T extends string, Acc extends string[]> = `` extends T
     ? Acc
     : ParseToken<T> extends `${infer A extends string}`
     ? T extends `${A}${infer B extends string}`
-        ? ParseTokensRec<Trim<B>, [...Acc, A]>
+        ? A extends `'${infer _}`
+            ? ParseTokensRec<Trim<B>, [...Acc, A]>
+            : ParseTokensRec<Trim<B>, [...Acc, Lowercase<A>]>
         : Acc
     : never
 
