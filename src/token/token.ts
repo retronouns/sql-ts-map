@@ -47,7 +47,7 @@ export type ParseToken<T extends string> = `` extends Trim<T>
         : ParseWord<Trimmed>
     : never
 
-type ReservedWord = `SELECT` | `FROM` | `WHERE` | `JOIN` | `LEFT` | `ON`
+type ReservedWord = `SELECT` | `FROM` | `WHERE` | `JOIN` | `LEFT` | `ON` | `AS`
 type ParseTokensRec<T extends string, Acc extends string[]> = `` extends T
     ? Acc
     : ParseToken<T> extends `${infer A extends string}`
