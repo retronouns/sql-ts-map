@@ -148,6 +148,20 @@ expectToBe<ParseTokens<`tokenA 'tokenB still tokenB' tokenC`>>([
     `'tokenB still tokenB'`,
     `tokenC`,
 ])
+// parses reserved words to uppercase but not others
+expectToBe<
+    ParseTokens<`tokenA select AS From tokenB jOiN WHEre 'I\\'m a string!' tokenC`>
+>([
+    `tokenA`,
+    `SELECT`,
+    `AS`,
+    `FROM`,
+    `tokenB`,
+    `JOIN`,
+    `WHERE`,
+    `'I\\'m a string!'`,
+    `tokenC`,
+])
 // parses special characters
 expectToBe<ParseTokens<`=u.id`>>([`=`, `u.id`])
 expectToBe<ParseTokens<`= u.id`>>([`=`, `u.id`])
