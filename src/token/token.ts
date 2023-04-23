@@ -23,7 +23,6 @@ export type ParseString<T extends string> = T extends `${
     : never
 
 type WordChars = Alpha | Digit | `.`
-
 type ParseWordRec<
     T extends string,
     Acc extends string,
@@ -48,13 +47,14 @@ export type ParseToken<T extends string> = `` extends Trim<T>
         : ParseWord<Trimmed>
     : never
 
+type ReservedWord = `SELECT` | `FROM` | `WHERE` | `JOIN` | `LEFT` | `ON`
 type ParseTokensRec<T extends string, Acc extends string[]> = `` extends T
     ? Acc
     : ParseToken<T> extends `${infer A extends string}`
     ? T extends `${A}${infer B extends string}`
-        ? A extends `'${infer _}`
-            ? ParseTokensRec<Trim<B>, [...Acc, A]>
-            : ParseTokensRec<Trim<B>, [...Acc, Lowercase<A>]>
+        ? Uppercase<A> extends ReservedWord
+            ? ParseTokensRec<Trim<B>, [...Acc, Uppercase<A>]>
+            : ParseTokensRec<Trim<B>, [...Acc, A]>
         : Acc
     : never
 

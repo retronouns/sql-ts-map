@@ -3,7 +3,7 @@ import { ParseString, ParseWord, ParseToken, ParseTokens } from './token'
 
 const VERY_LONG_STRING = `'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.'`
 const VERY_LONG_WORDS = `Lorem Ipsum is simply dummy text of the printing and typesetting industry Lorem Ipsum has been the industrys standard dummy text ever since the 1500s when an unknown printer took a galley of type and scrambled it to make a type specimen book It has survived not only five centuries but also the leap into electronic typesetting remaining essentially unchanged It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum`
-const VERY_LONG_TOKENS = `Lorem  Ipsum   1 is 12 simply 123 dummy \n text\n\n\n of the printing and typesetting industry Lorem Ipsum has been the industrys standard dummy text ever since the 1500s when an unknown 'I\\'m a string' took a galley of type and scrambled it to make a type specimen book It has survived not only five centuries but also the leap into electronic typesetting remaining essentially unchanged It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum 'I\\'m a string'`
+const VERY_LONG_TOKENS = `Lorem  Ipsum   1 is 12 simply 123 dummy \n text\n\n\n of the printing and typesetting industry Lorem Ipsum has been the industrys standard dummy text ever since the 1500s when an unknown 'i\\'m a string' took a galley of type and scrambled it to make a type specimen book It has survived not only five centuries but also the leap into electronic typesetting remaining essentially unchanged It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum 'i\\'m a string'`
 
 /**
  * ParseString Tests
@@ -142,11 +142,11 @@ expectToBe<ParseToken<typeof VERY_LONG_WORDS>>(`Lorem`)
  */
 
 // parses multiple tokens into an array
-expectToBe<ParseTokens<`tokenA tokenB tokenC`>>([`tokena`, `tokenb`, `tokenc`])
+expectToBe<ParseTokens<`tokenA tokenB tokenC`>>([`tokenA`, `tokenB`, `tokenC`])
 expectToBe<ParseTokens<`tokenA 'tokenB still tokenB' tokenC`>>([
-    `tokena`,
+    `tokenA`,
     `'tokenB still tokenB'`,
-    `tokenc`,
+    `tokenC`,
 ])
 // parses special characters
 expectToBe<ParseTokens<`=u.id`>>([`=`, `u.id`])
@@ -178,43 +178,43 @@ expectToBe<ParseTokens<`!= u.id`>>([`!=`, `u.id`])
 expectToBe<ParseTokens<` !=u.id`>>([`!=`, `u.id`])
 expectToBe<ParseTokens<` != u.id`>>([`!=`, `u.id`])
 // special chars indicate end of token
-expectToBe<ParseTokens<`tokenA=tokenB`>>([`tokena`, `=`, `tokenb`])
-expectToBe<ParseTokens<`tokenA>tokenB`>>([`tokena`, `>`, `tokenb`])
-expectToBe<ParseTokens<`tokenA<tokenB`>>([`tokena`, `<`, `tokenb`])
-expectToBe<ParseTokens<`tokenA>=tokenB`>>([`tokena`, `>=`, `tokenb`])
-expectToBe<ParseTokens<`tokenA<=tokenB`>>([`tokena`, `<=`, `tokenb`])
-expectToBe<ParseTokens<`tokenA!=tokenB`>>([`tokena`, `!=`, `tokenb`])
-expectToBe<ParseTokens<`tokenA = tokenB`>>([`tokena`, `=`, `tokenb`])
-expectToBe<ParseTokens<`tokenA > tokenB`>>([`tokena`, `>`, `tokenb`])
-expectToBe<ParseTokens<`tokenA < tokenB`>>([`tokena`, `<`, `tokenb`])
-expectToBe<ParseTokens<`tokenA >= tokenB`>>([`tokena`, `>=`, `tokenb`])
-expectToBe<ParseTokens<`tokenA <= tokenB`>>([`tokena`, `<=`, `tokenb`])
-expectToBe<ParseTokens<`tokenA != tokenB`>>([`tokena`, `!=`, `tokenb`])
-expectToBe<ParseTokens<`tokenA, tokenB`>>([`tokena`, `,`, `tokenb`])
-expectToBe<ParseTokens<`tokenA , tokenB`>>([`tokena`, `,`, `tokenb`])
+expectToBe<ParseTokens<`tokenA=tokenB`>>([`tokenA`, `=`, `tokenB`])
+expectToBe<ParseTokens<`tokenA>tokenB`>>([`tokenA`, `>`, `tokenB`])
+expectToBe<ParseTokens<`tokenA<tokenB`>>([`tokenA`, `<`, `tokenB`])
+expectToBe<ParseTokens<`tokenA>=tokenB`>>([`tokenA`, `>=`, `tokenB`])
+expectToBe<ParseTokens<`tokenA<=tokenB`>>([`tokenA`, `<=`, `tokenB`])
+expectToBe<ParseTokens<`tokenA!=tokenB`>>([`tokenA`, `!=`, `tokenB`])
+expectToBe<ParseTokens<`tokenA = tokenB`>>([`tokenA`, `=`, `tokenB`])
+expectToBe<ParseTokens<`tokenA > tokenB`>>([`tokenA`, `>`, `tokenB`])
+expectToBe<ParseTokens<`tokenA < tokenB`>>([`tokenA`, `<`, `tokenB`])
+expectToBe<ParseTokens<`tokenA >= tokenB`>>([`tokenA`, `>=`, `tokenB`])
+expectToBe<ParseTokens<`tokenA <= tokenB`>>([`tokenA`, `<=`, `tokenB`])
+expectToBe<ParseTokens<`tokenA != tokenB`>>([`tokenA`, `!=`, `tokenB`])
+expectToBe<ParseTokens<`tokenA, tokenB`>>([`tokenA`, `,`, `tokenB`])
+expectToBe<ParseTokens<`tokenA , tokenB`>>([`tokenA`, `,`, `tokenB`])
 // trims leading whitespace
-expectToBe<ParseTokens<` tokenA tokenB tokenC`>>([`tokena`, `tokenb`, `tokenc`])
+expectToBe<ParseTokens<` tokenA tokenB tokenC`>>([`tokenA`, `tokenB`, `tokenC`])
 expectToBe<ParseTokens<`     tokenA tokenB tokenC`>>([
-    `tokena`,
-    `tokenb`,
-    `tokenc`,
+    `tokenA`,
+    `tokenB`,
+    `tokenC`,
 ])
 expectToBe<ParseTokens<`\ntokenA tokenB tokenC`>>([
-    `tokena`,
-    `tokenb`,
-    `tokenc`,
+    `tokenA`,
+    `tokenB`,
+    `tokenC`,
 ])
 expectToBe<ParseTokens<`\n\n\ntokenA tokenB tokenC`>>([
-    `tokena`,
-    `tokenb`,
-    `tokenc`,
+    `tokenA`,
+    `tokenB`,
+    `tokenC`,
 ])
 // doesn't hit recursion limit
 expectToBe<
     ParseTokens<`${typeof VERY_LONG_TOKENS}, ${typeof VERY_LONG_TOKENS}`>
 >([
-    `lorem`,
-    `ipsum`,
+    `Lorem`,
+    `Ipsum`,
     `1`,
     `is`,
     `12`,
@@ -228,8 +228,8 @@ expectToBe<
     `and`,
     `typesetting`,
     `industry`,
-    `lorem`,
-    `ipsum`,
+    `Lorem`,
+    `Ipsum`,
     `has`,
     `been`,
     `the`,
@@ -244,7 +244,7 @@ expectToBe<
     `when`,
     `an`,
     `unknown`,
-    `'I\\'m a string'`,
+    `'i\\'m a string'`,
     `took`,
     `a`,
     `galley`,
@@ -259,7 +259,7 @@ expectToBe<
     `type`,
     `specimen`,
     `book`,
-    `it`,
+    `It`,
     `has`,
     `survived`,
     `not`,
@@ -276,7 +276,7 @@ expectToBe<
     `remaining`,
     `essentially`,
     `unchanged`,
-    `it`,
+    `It`,
     `was`,
     `popularised`,
     `in`,
@@ -286,11 +286,11 @@ expectToBe<
     `the`,
     `release`,
     `of`,
-    `letraset`,
+    `Letraset`,
     `sheets`,
     `containing`,
-    `lorem`,
-    `ipsum`,
+    `Lorem`,
+    `Ipsum`,
     `passages`,
     `and`,
     `more`,
@@ -300,17 +300,17 @@ expectToBe<
     `publishing`,
     `software`,
     `like`,
-    `aldus`,
-    `pagemaker`,
+    `Aldus`,
+    `PageMaker`,
     `including`,
     `versions`,
     `of`,
-    `lorem`,
-    `ipsum`,
-    `'I\\'m a string'`,
+    `Lorem`,
+    `Ipsum`,
+    `'i\\'m a string'`,
     `,`,
-    `lorem`,
-    `ipsum`,
+    `Lorem`,
+    `Ipsum`,
     `1`,
     `is`,
     `12`,
@@ -324,8 +324,8 @@ expectToBe<
     `and`,
     `typesetting`,
     `industry`,
-    `lorem`,
-    `ipsum`,
+    `Lorem`,
+    `Ipsum`,
     `has`,
     `been`,
     `the`,
@@ -340,7 +340,7 @@ expectToBe<
     `when`,
     `an`,
     `unknown`,
-    `'I\\'m a string'`,
+    `'i\\'m a string'`,
     `took`,
     `a`,
     `galley`,
@@ -355,7 +355,7 @@ expectToBe<
     `type`,
     `specimen`,
     `book`,
-    `it`,
+    `It`,
     `has`,
     `survived`,
     `not`,
@@ -372,7 +372,7 @@ expectToBe<
     `remaining`,
     `essentially`,
     `unchanged`,
-    `it`,
+    `It`,
     `was`,
     `popularised`,
     `in`,
@@ -382,11 +382,11 @@ expectToBe<
     `the`,
     `release`,
     `of`,
-    `letraset`,
+    `Letraset`,
     `sheets`,
     `containing`,
-    `lorem`,
-    `ipsum`,
+    `Lorem`,
+    `Ipsum`,
     `passages`,
     `and`,
     `more`,
@@ -396,12 +396,12 @@ expectToBe<
     `publishing`,
     `software`,
     `like`,
-    `aldus`,
-    `pagemaker`,
+    `Aldus`,
+    `PageMaker`,
     `including`,
     `versions`,
     `of`,
-    `lorem`,
-    `ipsum`,
-    `'I\\'m a string'`,
+    `Lorem`,
+    `Ipsum`,
+    `'i\\'m a string'`,
 ])
