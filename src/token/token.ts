@@ -4,9 +4,6 @@ type Trim<T extends string> = TrimLeft<T, Whitespace>
 type Special = Comparator | `,`
 type TrimSpecial<T extends string> = TrimLeft<T, Special>
 
-export type ParseString<T extends string> = Trim<T> extends `'${infer B}`
-    ? `'${ParseStringRec<B, ''>}'`
-    : never
 type ParseStringRec<
     T extends string,
     Acc extends string,
@@ -17,6 +14,13 @@ type ParseStringRec<
     : T extends `${infer A}${infer B}`
     ? ParseStringRec<B, `${Acc}${A}`>
     : never
+export type ParseString<T extends string> = T extends `${
+    | Whitespace
+    | Special}${infer Anything}`
+    ? never
+    : T extends `'${infer B}`
+    ? `'${ParseStringRec<B, ''>}'`
+    : never
 
 type WordChars = Alpha | Digit | `.`
 
@@ -26,7 +30,11 @@ type ParseWordRec<
 > = T extends `${infer A extends WordChars}${infer B}`
     ? ParseWordRec<B, `${Acc}${A}`>
     : Acc
-export type ParseWord<T extends string> = ParseWordRec<T, ``>
+export type ParseWord<T extends string> = T extends `${
+    | Whitespace
+    | Special}${infer Anything}`
+    ? never
+    : ParseWordRec<T, ``>
 
 export type ParseToken<T extends string> = `` extends Trim<T>
     ? never
