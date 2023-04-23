@@ -1,10 +1,10 @@
-import { Alpha, Whitespace, Digit, Comparator, TrimLeft } from './util'
+import { Alpha, Whitespace, Digit, Comparator, TrimLeft } from './../util'
 
 type Trim<T extends string> = TrimLeft<T, Whitespace>
 type Special = Comparator | `,`
 type TrimSpecial<T extends string> = TrimLeft<T, Special>
 
-type ParseString<T extends string> = T extends `'${infer B}`
+export type ParseString<T extends string> = Trim<T> extends `'${infer B}`
     ? `'${ParseStringRec<B, ''>}'`
     : never
 type ParseStringRec<
@@ -26,9 +26,9 @@ type ParseWordRec<
 > = T extends `${infer A extends WordChars}${infer B}`
     ? ParseWordRec<B, `${Acc}${A}`>
     : Acc
-type ParseWord<T extends string> = ParseWordRec<T, ``>
+export type ParseWord<T extends string> = ParseWordRec<T, ``>
 
-type ParseToken<T extends string> = `` extends Trim<T>
+export type ParseToken<T extends string> = `` extends Trim<T>
     ? never
     : Trim<T> extends `${infer Trimmed extends string}`
     ? Trimmed extends `'${infer Tail extends string}`
