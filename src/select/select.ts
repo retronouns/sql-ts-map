@@ -12,20 +12,37 @@ FROM users u
 JOIN posts p ON p.user_id = u.id
 WHERE u.id = 1`
 
-type SelectParts<T extends string> = ParseTokens<T> extends [
-    'select',
-    ...infer A,
-]
-    ? A extends [...infer SelectColumns extends string[], 'from', ...infer Rest]
-        ? SelectColumns
-        : `A`
-    : never
-
 export type Select<T extends string> = ParseTokens<T>
 
-type test = SelectParts<typeof SQL>
 type test2 = ConsumeSelectColumns<[`SELECT`, `id`, `,`]>
 type test3 = ConsumeSelectColumns<ParseTokens<typeof SQL>>
+
+type ConsumeSelect<T extends string> =
+    ParseTokens<T> extends infer Parsed extends string[]
+        ? ConsumeSelectColumns<Parsed> extends infer ConsumedColumns extends [
+              [string, string, string][],
+              string[],
+          ]
+            ? [[], []] extends ConsumedColumns // [[], []] indicates parse failure
+                ? never
+                : Parsed extends [...ConsumedColumns[1], ...infer FromTokens]
+                ? FromTokens
+                : never
+            : never
+        : never
+
+type test4 = ConsumeSelect<typeof SQL>
+type test5 = ConsumeSelectFrom<test4>
+
+export type ConsumeSelectFrom<T extends string[]> = ConsumeSelectFromRec<
+    T,
+    [[], []]
+>
+export type ConsumeSelectFromRec<
+    T extends string[],
+    Acc extends [[string, string][], string[]], // [[table, alias][], [...consumed]]
+> = 1
+
 type COL_START = `SELECT` | `,`
 type COL_END = `FROM` | `,`
 type AS = `AS`
@@ -35,7 +52,7 @@ export type ConsumeSelectColumns<T extends string[]> = ConsumeSelectColumnsRec<
 >
 export type ConsumeSelectColumnsRec<
     T extends string[],
-    Acc extends [[string, string, string][], string[]], // [[table, column, alias], [...tail]]
+    Acc extends [[string, string, string][], string[]], // [[table, column, alias][], [...consumed]]
 > = T extends [
     // parses with a table identifier
     infer Start extends COL_START,
@@ -121,9 +138,3 @@ export type ConsumeSelectColumnsRec<
           [[...Acc[0], [``, Column, Alias]], [...Acc[1], Start, Column, Alias]]
       >
     : Acc
-// type ConsumeSelectColumns<
-//     T extends string[],
-//     Acc extends [string, string][],
-// > = T extends ['FROM', ...infer Tail]
-//     ? Acc
-//     :
