@@ -6,10 +6,11 @@ const SQL = `
 SELECT 
     u.id,
     u.name,
-    p.title,
-    p.body
+    posts.title,
+    posts.body
 FROM users u
-JOIN posts p ON p.user_id = u.id
+LEFT JOIN posts ON posts.user_id = u.id
+LEFT OUTER JOIN threads t ON t.user_id = u.id
 WHERE u.id = 1`
 
 export type Select<T extends string> = ParseTokens<T>
@@ -25,23 +26,99 @@ type ConsumeSelect<T extends string> =
           ]
             ? [[], []] extends ConsumedColumns // [[], []] indicates parse failure
                 ? never
-                : Parsed extends [...ConsumedColumns[1], ...infer FromTokens]
-                ? FromTokens
+                : Parsed extends [
+                      ...ConsumedColumns[1],
+                      ...infer FromTokens extends string[],
+                  ]
+                ? ConsumeSelectFrom<FromTokens> extends infer ConsumedTables extends [
+                      [string, string][],
+                      string[],
+                  ]
+                    ? [ConsumedColumns[0], ConsumedTables[0]]
+                    : never
                 : never
             : never
         : never
 
 type test4 = ConsumeSelect<typeof SQL>
-type test5 = ConsumeSelectFrom<test4>
 
-export type ConsumeSelectFrom<T extends string[]> = ConsumeSelectFromRec<
-    T,
+type JOIN_END = `WHERE` | `JOIN` | `LEFT` | `FULL` | `OUTER` | `RIGHT` | `INNER`
+export type ConsumeSelectFrom<T extends string[]> = T extends [
+    `FROM`,
+    infer Table extends string,
+    infer Alias extends string,
+    infer FromEnd extends JOIN_END,
+    ...infer Rest extends string[],
+]
+    ? ConsumeSelectJoinsRec<
+          [FromEnd, ...Rest],
+          [[[Table, Alias]], [`FROM`, Table, Alias, FromEnd]]
+      >
+    : T extends [
+          `FROM`,
+          infer Table extends string,
+          infer FromEnd extends JOIN_END,
+          ...infer Rest extends string[],
+      ]
+    ? ConsumeSelectJoinsRec<
+          [FromEnd, ...Rest],
+          [[[Table, Table]], [`FROM`, Table, FromEnd]]
+      >
+    : never
+
+type test7 = ConsumeSelectJoinsRec<
+    ParseTokens<`LEFT JOIN posts ON posts.user_id = u.id LEFT OUTER JOIN threads t ON t.user_id = u.id`>,
     [[], []]
 >
-export type ConsumeSelectFromRec<
+export type ConsumeSelectJoinsRec<
     T extends string[],
     Acc extends [[string, string][], string[]], // [[table, alias][], [...consumed]]
-> = 1
+> = T extends [...ConsumeUntilJoin<T>, `JOIN`, ...infer A]
+    ? A extends [
+          infer Table extends string,
+          infer Alias extends string,
+          `ON`,
+          ...infer Rest extends string[],
+      ]
+        ? ConsumeSelectJoinsRec<
+              Rest,
+              [
+                  [...Acc[0], [Table, Alias]],
+                  [
+                      ...Acc[1],
+                      ...ConsumeUntilJoin<T>,
+                      `JOIN`,
+                      Table,
+                      Alias,
+                      `ON`,
+                  ],
+              ]
+          >
+        : A extends [
+              infer Table extends string,
+              `ON`,
+              ...infer Rest extends string[],
+          ]
+        ? ConsumeSelectJoinsRec<
+              Rest,
+              [
+                  [...Acc[0], [Table, Table]],
+                  [...Acc[1], ...ConsumeUntilJoin<T>, `JOIN`, Table, `ON`],
+              ]
+          >
+        : Acc
+    : Acc
+
+export type ConsumeUntilJoin<T extends string[]> = ConsumeUntilJoinRec<T, []>
+type ConsumeUntilJoinRec<T extends string[], Acc extends string[]> = T extends [
+    `JOIN` | `WHERE`,
+    ...infer _,
+]
+    ? Acc
+    : T extends [infer Token extends string, ...infer Rest extends string[]]
+    ? ConsumeUntilJoinRec<Rest, [...Acc, Token]>
+    : never
+type test6 = ConsumeUntilJoinRec<[`LEFT`, `OUTER`, `JOIN`], []>
 
 type COL_START = `SELECT` | `,`
 type COL_END = `FROM` | `,`
