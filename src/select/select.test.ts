@@ -1,5 +1,4 @@
 import { expectToBe, expectNever } from '../test'
-import { DbTables } from '../tables'
 import {
     ConsumeSelectColumns,
     ConsumeUntilJoin,
@@ -8,6 +7,8 @@ import {
     MapColumnsToTables,
     AliasedTables,
 } from './select'
+
+const anytype = JSON.parse('{}')
 
 // prettier-ignore
 const test = () => {
@@ -37,7 +38,8 @@ const test = () => {
         u.name as username,
         posts.date_created as dateCreated,
         t.title,
-        posts.body postBody
+        posts.body postBody,
+        t.unknown
     FROM users u
     JOIN posts ON posts.user_id = u.id
     JOIN threads t ON t.user_id = u.id
@@ -50,7 +52,8 @@ const test = () => {
         username: 'users_name',
         dateCreated: `posts_date_created`,
         title: `threads_title`,
-        postBody: `posts_body`
+        postBody: `posts_body`,
+        unknown: anytype
     })
 
     /**
@@ -90,7 +93,21 @@ const test = () => {
     /**
      * ConsumeSelectJoinsRec Tests
      */
-    expectToBe<ConsumeSelectJoinsRec<DbTables, ["LEFT", "JOIN", "posts", "ON", "posts.user_id", "=", "u.id", "LEFT", "OUTER", "JOIN", "threads", "t", "ON", "t.user_id", "=", "u.id"],[[], []]>>([[["posts", "posts"], ["threads", "t"]], ["LEFT", "JOIN", "posts", "ON", "posts.user_id", "=", "u.id", "LEFT", "OUTER", "JOIN", "threads", "t", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["JOIN", "users", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "users"]], ["JOIN", "users", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "u"]], ["JOIN", "users", "u", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "JOIN", "users", "ON", "posts.id", "=", "users.id", "LEFT"], [[],[]]>>([[["users", "users"]], ["LEFT", "JOIN", "users", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "LEFT"], [[],[]]>>([[["users", "u"]], ["LEFT", "JOIN", "users", "u", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "OUTER", "JOIN", "users", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "users"]], ["LEFT", "OUTER", "JOIN", "users", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "OUTER", "JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "u"]], ["LEFT", "OUTER", "JOIN", "users", "u", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["INNER", "JOIN", "users", "ON", "posts.id", "=", "users.id", "INNER"], [[],[]]>>([[["users", "users"]], ["INNER", "JOIN", "users", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["INNER", "JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "INNER"], [[],[]]>>([[["users", "u"]], ["INNER", "JOIN", "users", "u", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["JOIN", "users", "ON", "posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN"], [[],[]]>>([[["users", "users"]], ["JOIN", "users", "ON"]])
+
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "u", "ON"], [[],[]]>>([[["users", "u"]], ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "u", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "ON"], [[],[]]>>([[["users", "users"]], ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "ON"]])
+
+    // can parse multiple joins
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "JOIN", "posts", "ON", "posts.user_id", "=", "u.id", "LEFT", "OUTER", "JOIN", "threads", "t", "ON", "t.user_id", "=", "u.id"],[[], []]>>([[["posts", "posts"], ["threads", "t"]], ["LEFT", "JOIN", "posts", "ON", "posts.user_id", "=", "u.id", "LEFT", "OUTER", "JOIN", "threads", "t", "ON"]])
 
     /**
      * ConsumeUntilJoin Tests
