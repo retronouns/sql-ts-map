@@ -1,8 +1,71 @@
 import { expectToBe, expectNever } from '../test'
-import { ConsumeSelectColumns } from './select'
+import { DbTables } from '../tables'
+import {
+    ConsumeSelectColumns,
+    ConsumeUntilJoin,
+    ConsumeSelectJoinsRec,
+    ConsumeSelect,
+    MapColumnsToTables,
+    AliasedTables,
+} from './select'
 
 // prettier-ignore
 const test = () => {
+    const SQL = `
+    SELECT 
+        u.id as userId,
+        u.name as username,
+        posts.date_created as dateCreated,
+        t.title,
+        posts.body postBody
+    FROM users u
+    JOIN posts ON posts.user_id = u.id
+    JOIN threads t ON t.user_id = u.id
+    WHERE u.id = 1`
+    /**
+     * ConsumeSelect Tests
+     */
+    expectToBe<ConsumeSelect<DbTables, typeof SQL>>({
+        userId: 0,
+        username: 'string',
+        dateCreated: new Date(),
+        title: null,
+        postBody: null
+    })
+    expectToBe<ConsumeSelect<DbTables, typeof SQL>>({
+        userId: 0,
+        username: 'string',
+        dateCreated: new Date(),
+        title: 'string',
+        postBody: 'string'
+    })
+
+    /**
+     * AliasedTables Tests
+     */
+
+    /** 
+     * MapColumnsToTables Tests
+     */
+    expectToBe<MapColumnsToTables<[['p', 'body', 'postBody'], ['users', 'name', 'name']],{ p: {body: string | null}, users: { name: string } }>>({ postBody: null, name: 'string' })
+    expectToBe<MapColumnsToTables<[['p', 'body', 'postBody'], ['users', 'name', 'name']],{ p: {body: string | null}, users: { name: string } }>>({ postBody: 'string', name: 'string' })
+
+    /**
+     * ConsumeSelectJoinsRec Tests
+     */
+    expectToBe<ConsumeSelectJoinsRec<DbTables, ["LEFT", "JOIN", "posts", "ON", "posts.user_id", "=", "u.id", "LEFT", "OUTER", "JOIN", "threads", "t", "ON", "t.user_id", "=", "u.id"],[[], []]>>([[["posts", "posts"], ["threads", "t"]], ["LEFT", "JOIN", "posts", "ON", "posts.user_id", "=", "u.id", "LEFT", "OUTER", "JOIN", "threads", "t", "ON"]])
+
+    /**
+     * ConsumeUntilJoin Tests
+     */
+    expectToBe<ConsumeUntilJoin<[`LEFT`, `OUTER`, `JOIN`]>>([`LEFT`, `OUTER`])
+    expectToBe<ConsumeUntilJoin<[`JOIN`]>>([])
+    expectToBe<ConsumeUntilJoin<[`posts.user_id`, `=`, `u.id`, `LEFT`, `OUTER`, `JOIN`, `threads`, `t`, `ON`]>>([`posts.user_id`, `=`, `u.id`, `LEFT`, `OUTER`])
+
+    /**
+     * ConsumeSelectColumns Tests
+     */
+
     // parses with a table identifier
     expectToBe<ConsumeSelectColumns<[`SELECT`, `u.id`, `,`]>>([[[`u`, `id`, `id`]], [`SELECT`, `u.id`]])
     expectToBe<ConsumeSelectColumns<[`,`, `u.id`, `,`]>>([[[`u`, `id`, `id`]], [`,`, `u.id`]])
