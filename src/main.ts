@@ -11,7 +11,7 @@ SELECT
     u.non_existent
 FROM threads t
 JOIN posts p ON p.thread_id = t.id
-JOIN users u ON u.id = p.user_id
+LEFT JOIN users u ON u.id = p.user_id
 WHERE u.id = 1`
 
 type SelectTest = Select<typeof SQL>

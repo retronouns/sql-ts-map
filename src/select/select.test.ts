@@ -41,7 +41,7 @@ const test = () => {
         posts.body postBody,
         t.unknown
     FROM users u
-    JOIN posts ON posts.user_id = u.id
+    LEFT JOIN posts ON posts.user_id = u.id
     JOIN threads t ON t.user_id = u.id
     WHERE u.id = 1`
     /**
@@ -50,7 +50,7 @@ const test = () => {
     expectToBe<ConsumeSelect<TestTables, typeof SQL>>({
         userId: 0,
         username: 'users_name',
-        dateCreated: `posts_date_created`,
+        dateCreated: null,
         title: `threads_title`,
         postBody: `posts_body`,
         unknown: anytype
@@ -59,24 +59,11 @@ const test = () => {
     /**
      * AliasedTables Tests
      */
-    expectToBe<AliasedTables<TestTables, [['users', 'u']]>>({
+    expectToBe<AliasedTables<TestTables, [['users', 'u', `INNER`]]>>({
         users: {
             id: 0,
             date_created: `users_date_created`,
             name: `users_name`,
-        },
-        posts: {
-            id: 1,
-            user_id: 3,
-            thread_id: 4,
-            date_created: `posts_date_created`,
-            body: `posts_body`,
-        },
-        threads: {
-            id: 2,
-            user_id: 5,
-            date_created: `threads_date_created`,
-            title: `threads_title`,
         },
         u: {
             id: 0,
@@ -93,28 +80,28 @@ const test = () => {
     /**
      * ConsumeSelectJoinsRec Tests
      */
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["JOIN", "users", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "users"]], ["JOIN", "users", "ON"]])
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "u"]], ["JOIN", "users", "u", "ON"]])
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "JOIN", "users", "ON", "posts.id", "=", "users.id", "LEFT"], [[],[]]>>([[["users", "users"]], ["LEFT", "JOIN", "users", "ON"]])
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "LEFT"], [[],[]]>>([[["users", "u"]], ["LEFT", "JOIN", "users", "u", "ON"]])
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "OUTER", "JOIN", "users", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "users"]], ["LEFT", "OUTER", "JOIN", "users", "ON"]])
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "OUTER", "JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "u"]], ["LEFT", "OUTER", "JOIN", "users", "u", "ON"]])
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["INNER", "JOIN", "users", "ON", "posts.id", "=", "users.id", "INNER"], [[],[]]>>([[["users", "users"]], ["INNER", "JOIN", "users", "ON"]])
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["INNER", "JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "INNER"], [[],[]]>>([[["users", "u"]], ["INNER", "JOIN", "users", "u", "ON"]])
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["JOIN", "users", "ON", "posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN"], [[],[]]>>([[["users", "users"]], ["JOIN", "users", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["JOIN", "users", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "users", `INNER`]], ["JOIN", "users", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "u", `INNER`]], ["JOIN", "users", "u", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "JOIN", "users", "ON", "posts.id", "=", "users.id", "LEFT"], [[],[]]>>([[["users", "users", `LEFT`]], ["LEFT", "JOIN", "users", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "LEFT"], [[],[]]>>([[["users", "u", `LEFT`]], ["LEFT", "JOIN", "users", "u", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "OUTER", "JOIN", "users", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "users", `LEFT`]], ["LEFT", "OUTER", "JOIN", "users", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "OUTER", "JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "JOIN"], [[],[]]>>([[["users", "u", `LEFT`]], ["LEFT", "OUTER", "JOIN", "users", "u", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["INNER", "JOIN", "users", "ON", "posts.id", "=", "users.id", "INNER"], [[],[]]>>([[["users", "users", `INNER`]], ["INNER", "JOIN", "users", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["INNER", "JOIN", "users", "u", "ON", "posts.id", "=", "users.id", "INNER"], [[],[]]>>([[["users", "u", `INNER`]], ["INNER", "JOIN", "users", "u", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["JOIN", "users", "ON", "posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN"], [[],[]]>>([[["users", "users", `INNER`]], ["JOIN", "users", "ON"]])
 
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "u", "ON"], [[],[]]>>([[["users", "u"]], ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "u", "ON"]])
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "ON"], [[],[]]>>([[["users", "users"]], ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "u", "ON"], [[],[]]>>([[["users", "u", `INNER`]], ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "u", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "ON"], [[],[]]>>([[["users", "users", `INNER`]], ["posts.id", "=", "users.id", "AND", "posts.deleted", "=", "1", "JOIN", "users", "ON"]])
 
     // can parse multiple joins
-    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "JOIN", "posts", "ON", "posts.user_id", "=", "u.id", "LEFT", "OUTER", "JOIN", "threads", "t", "ON", "t.user_id", "=", "u.id"],[[], []]>>([[["posts", "posts"], ["threads", "t"]], ["LEFT", "JOIN", "posts", "ON", "posts.user_id", "=", "u.id", "LEFT", "OUTER", "JOIN", "threads", "t", "ON"]])
+    expectToBe<ConsumeSelectJoinsRec<TestTables, ["LEFT", "JOIN", "posts", "ON", "posts.user_id", "=", "u.id", "LEFT", "OUTER", "JOIN", "threads", "t", "ON", "t.user_id", "=", "u.id"],[[], []]>>([[["posts", "posts", `LEFT`], ["threads", "t", `LEFT`]], ["LEFT", "JOIN", "posts", "ON", "posts.user_id", "=", "u.id", "LEFT", "OUTER", "JOIN", "threads", "t", "ON"]])
 
     /**
      * ConsumeUntilJoin Tests
      */
-    expectToBe<ConsumeUntilJoin<[`LEFT`, `OUTER`, `JOIN`]>>([`LEFT`, `OUTER`])
+    expectToBe<ConsumeUntilJoin<[`LEFT`, `OUTER`, `JOIN`]>>([])
     expectToBe<ConsumeUntilJoin<[`JOIN`]>>([])
-    expectToBe<ConsumeUntilJoin<[`posts.user_id`, `=`, `u.id`, `LEFT`, `OUTER`, `JOIN`, `threads`, `t`, `ON`]>>([`posts.user_id`, `=`, `u.id`, `LEFT`, `OUTER`])
+    expectToBe<ConsumeUntilJoin<[`posts.user_id`, `=`, `u.id`, `LEFT`, `OUTER`, `JOIN`, `threads`, `t`, `ON`]>>([`posts.user_id`, `=`, `u.id`])
 
     /**
      * ConsumeSelectColumns Tests
