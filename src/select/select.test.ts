@@ -41,7 +41,7 @@ const test = () => {
         posts.body postBody,
         t.unknown
     FROM users u
-    JOIN posts ON posts.user_id = u.id
+    LEFT JOIN posts ON posts.user_id = u.id
     JOIN threads t ON t.user_id = u.id
     WHERE u.id = 1`
     /**
@@ -50,7 +50,7 @@ const test = () => {
     expectToBe<ConsumeSelect<TestTables, typeof SQL>>({
         userId: 0,
         username: 'users_name',
-        dateCreated: `posts_date_created`,
+        dateCreated: null,
         title: `threads_title`,
         postBody: `posts_body`,
         unknown: anytype
@@ -64,19 +64,6 @@ const test = () => {
             id: 0,
             date_created: `users_date_created`,
             name: `users_name`,
-        },
-        posts: {
-            id: 1,
-            user_id: 3,
-            thread_id: 4,
-            date_created: `posts_date_created`,
-            body: `posts_body`,
-        },
-        threads: {
-            id: 2,
-            user_id: 5,
-            date_created: `threads_date_created`,
-            title: `threads_title`,
         },
         u: {
             id: 0,

@@ -3,11 +3,21 @@ import { ParseTokens } from './../token'
 
 export type Select<T extends string> = ConsumeSelect<DbTables, T>
 
+type Nullable<T> = {
+    [K in keyof T]: T[K] | null
+}
+
 export type AliasedTables<
     Tables extends { [J: string]: { [K: string]: any } },
     Aliases extends [keyof Tables, string, JoinType][],
-> = Tables & {
-    [L in Aliases[number] as L[1]]: Tables[L[0]]
+> = {
+    [L in Aliases[number] as L[1]]: L[2] extends `INNER`
+        ? Tables[L[0]]
+        : Nullable<Tables[L[0]]>
+} & {
+    [L in Aliases[number] as L[0]]: L[2] extends `INNER`
+        ? Tables[L[0]]
+        : Nullable<Tables[L[0]]>
 }
 
 export type MapColumnsToTables<
