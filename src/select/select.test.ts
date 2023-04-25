@@ -11,6 +11,26 @@ import {
 
 // prettier-ignore
 const test = () => {
+    type TestTables = {
+        users: {
+            id: 0
+            date_created: `users_date_created`
+            name: `users_name`
+        }
+        posts: {
+            id: 1
+            user_id: 3
+            thread_id: 4
+            date_created: `posts_date_created`
+            body: `posts_body`
+        }
+        threads: {
+            id: 2
+            user_id: 5
+            date_created: `threads_date_created`
+            title: `threads_title`
+        }
+    }
     const SQL = `
     SELECT 
         u.id as userId,
@@ -25,30 +45,47 @@ const test = () => {
     /**
      * ConsumeSelect Tests
      */
-    expectToBe<ConsumeSelect<DbTables, typeof SQL>>({
+    expectToBe<ConsumeSelect<TestTables, typeof SQL>>({
         userId: 0,
-        username: 'string',
-        dateCreated: new Date(),
-        title: null,
-        postBody: null
-    })
-    expectToBe<ConsumeSelect<DbTables, typeof SQL>>({
-        userId: 0,
-        username: 'string',
-        dateCreated: new Date(),
-        title: 'string',
-        postBody: 'string'
+        username: 'users_name',
+        dateCreated: `posts_date_created`,
+        title: `threads_title`,
+        postBody: `posts_body`
     })
 
     /**
      * AliasedTables Tests
      */
-
+    expectToBe<AliasedTables<TestTables, [['users', 'u']]>>({
+        users: {
+            id: 0,
+            date_created: `users_date_created`,
+            name: `users_name`,
+        },
+        posts: {
+            id: 1,
+            user_id: 3,
+            thread_id: 4,
+            date_created: `posts_date_created`,
+            body: `posts_body`,
+        },
+        threads: {
+            id: 2,
+            user_id: 5,
+            date_created: `threads_date_created`,
+            title: `threads_title`,
+        },
+        u: {
+            id: 0,
+            date_created: `users_date_created`,
+            name: `users_name`,
+        }
+    })
+    
     /** 
      * MapColumnsToTables Tests
      */
-    expectToBe<MapColumnsToTables<[['p', 'body', 'postBody'], ['users', 'name', 'name']],{ p: {body: string | null}, users: { name: string } }>>({ postBody: null, name: 'string' })
-    expectToBe<MapColumnsToTables<[['p', 'body', 'postBody'], ['users', 'name', 'name']],{ p: {body: string | null}, users: { name: string } }>>({ postBody: 'string', name: 'string' })
+    expectToBe<MapColumnsToTables<[['posts', 'body', 'postBody'], ['users', 'name', 'name']],TestTables>>({ postBody: `posts_body`, name: 'users_name' })
 
     /**
      * ConsumeSelectJoinsRec Tests
