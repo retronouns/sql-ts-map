@@ -5,7 +5,7 @@ export type Select<T extends string> = ConsumeSelect<DbTables, T>
 
 export type AliasedTables<
     Tables extends { [J: string]: { [K: string]: any } },
-    Aliases extends [keyof Tables, string][],
+    Aliases extends [keyof Tables, string, JoinType][],
 > = Tables & {
     [L in Aliases[number] as L[1]]: Tables[L[0]]
 }
@@ -39,7 +39,7 @@ export type ConsumeSelect<
                   Tables,
                   FromTokens
               > extends infer ConsumedTables extends [
-                  [keyof Tables, string][],
+                  [keyof Tables, string, JoinType][],
                   string[],
               ]
                 ? MapColumnsToTables<
@@ -65,7 +65,7 @@ export type ConsumeSelectFrom<
     ? ConsumeSelectJoinsRec<
           Tables,
           [FromEnd, ...Rest],
-          [[[Table, Alias]], [`FROM`, Table, Alias, FromEnd]]
+          [[[Table, Alias, `INNER`]], [`FROM`, Table, Alias, FromEnd]]
       >
     : T extends [
           `FROM`,
@@ -76,55 +76,193 @@ export type ConsumeSelectFrom<
     ? ConsumeSelectJoinsRec<
           Tables,
           [FromEnd, ...Rest],
-          [[[Table, Table]], [`FROM`, Table, FromEnd]]
+          [[[Table, Table, `INNER`]], [`FROM`, Table, FromEnd]]
       >
     : never
 
+type JoinType = `INNER` | `LEFT` | `FULL`
 export type ConsumeSelectJoinsRec<
     Tables extends { [J: string]: { [K: string]: any } },
     T extends string[],
-    Acc extends [[keyof Tables, string][], string[]], // [[table, alias][], [...consumed]]
-> = T extends [...ConsumeUntilJoin<T>, `JOIN`, ...infer A]
-    ? A extends [
+    Acc extends [[keyof Tables, string, JoinType][], string[]], // [[table, alias, joinType][], [...consumed]]
+> = T extends [
+    // plain join with alias
+    ...ConsumeUntilJoin<T>,
+    `JOIN`,
+    infer Table extends string,
+    infer Alias extends string,
+    `ON`,
+    ...infer Rest extends string[],
+]
+    ? ConsumeSelectJoinsRec<
+          Tables,
+          Rest,
+          [
+              [...Acc[0], [Table, Alias, `INNER`]],
+              [...Acc[1], ...ConsumeUntilJoin<T>, `JOIN`, Table, Alias, `ON`],
+          ]
+      >
+    : T extends [
+          // plain join no alias
+          ...ConsumeUntilJoin<T>,
+          `JOIN`,
+          infer Table extends string,
+          `ON`,
+          ...infer Rest extends string[],
+      ]
+    ? ConsumeSelectJoinsRec<
+          Tables,
+          Rest,
+          [
+              [...Acc[0], [Table, Table, `INNER`]],
+              [...Acc[1], ...ConsumeUntilJoin<T>, `JOIN`, Table, `ON`],
+          ]
+      >
+    : T extends [
+          // plain left join with alias
+          ...ConsumeUntilJoin<T>,
+          `LEFT`,
+          `JOIN`,
           infer Table extends string,
           infer Alias extends string,
           `ON`,
           ...infer Rest extends string[],
       ]
-        ? ConsumeSelectJoinsRec<
-              Tables,
-              Rest,
+    ? ConsumeSelectJoinsRec<
+          Tables,
+          Rest,
+          [
+              [...Acc[0], [Table, Alias, `LEFT`]],
               [
-                  [...Acc[0], [Table, Alias]],
-                  [
-                      ...Acc[1],
-                      ...ConsumeUntilJoin<T>,
-                      `JOIN`,
-                      Table,
-                      Alias,
-                      `ON`,
-                  ],
-              ]
-          >
-        : A extends [
-              infer Table extends string,
-              `ON`,
-              ...infer Rest extends string[],
+                  ...Acc[1],
+                  ...ConsumeUntilJoin<T>,
+                  `LEFT`,
+                  `JOIN`,
+                  Table,
+                  Alias,
+                  `ON`,
+              ],
           ]
-        ? ConsumeSelectJoinsRec<
-              Tables,
-              Rest,
+      >
+    : T extends [
+          // plain left join no alias
+          ...ConsumeUntilJoin<T>,
+          `LEFT`,
+          `JOIN`,
+          infer Table extends string,
+          `ON`,
+          ...infer Rest extends string[],
+      ]
+    ? ConsumeSelectJoinsRec<
+          Tables,
+          Rest,
+          [
+              [...Acc[0], [Table, Table, `LEFT`]],
+              [...Acc[1], ...ConsumeUntilJoin<T>, `LEFT`, `JOIN`, Table, `ON`],
+          ]
+      >
+    : T extends [
+          // inner join with alias
+          ...ConsumeUntilJoin<T>,
+          `INNER`,
+          `JOIN`,
+          infer Table extends string,
+          infer Alias extends string,
+          `ON`,
+          ...infer Rest extends string[],
+      ]
+    ? ConsumeSelectJoinsRec<
+          Tables,
+          Rest,
+          [
+              [...Acc[0], [Table, Alias, `INNER`]],
               [
-                  [...Acc[0], [Table, Table]],
-                  [...Acc[1], ...ConsumeUntilJoin<T>, `JOIN`, Table, `ON`],
-              ]
-          >
-        : Acc
+                  ...Acc[1],
+                  ...ConsumeUntilJoin<T>,
+                  `INNER`,
+                  `JOIN`,
+                  Table,
+                  Alias,
+                  `ON`,
+              ],
+          ]
+      >
+    : T extends [
+          // inner join no alias
+          ...ConsumeUntilJoin<T>,
+          `INNER`,
+          `JOIN`,
+          infer Table extends string,
+          `ON`,
+          ...infer Rest extends string[],
+      ]
+    ? ConsumeSelectJoinsRec<
+          Tables,
+          Rest,
+          [
+              [...Acc[0], [Table, Table, `INNER`]],
+              [...Acc[1], ...ConsumeUntilJoin<T>, `INNER`, `JOIN`, Table, `ON`],
+          ]
+      >
+    : T extends [
+          // left outer join with alias
+          ...ConsumeUntilJoin<T>,
+          `LEFT`,
+          `OUTER`,
+          `JOIN`,
+          infer Table extends string,
+          infer Alias extends string,
+          `ON`,
+          ...infer Rest extends string[],
+      ]
+    ? ConsumeSelectJoinsRec<
+          Tables,
+          Rest,
+          [
+              [...Acc[0], [Table, Alias, `LEFT`]],
+              [
+                  ...Acc[1],
+                  ...ConsumeUntilJoin<T>,
+                  `LEFT`,
+                  `OUTER`,
+                  `JOIN`,
+                  Table,
+                  Alias,
+                  `ON`,
+              ],
+          ]
+      >
+    : T extends [
+          // left outer join no alias
+          ...ConsumeUntilJoin<T>,
+          `LEFT`,
+          `OUTER`,
+          `JOIN`,
+          infer Table extends string,
+          `ON`,
+          ...infer Rest extends string[],
+      ]
+    ? ConsumeSelectJoinsRec<
+          Tables,
+          Rest,
+          [
+              [...Acc[0], [Table, Table, `LEFT`]],
+              [
+                  ...Acc[1],
+                  ...ConsumeUntilJoin<T>,
+                  `LEFT`,
+                  `OUTER`,
+                  `JOIN`,
+                  Table,
+                  `ON`,
+              ],
+          ]
+      >
     : Acc
 
 export type ConsumeUntilJoin<T extends string[]> = ConsumeUntilJoinRec<T, []>
 type ConsumeUntilJoinRec<T extends string[], Acc extends string[]> = T extends [
-    `JOIN` | `WHERE`,
+    JOIN_END,
     ...infer _,
 ]
     ? Acc
